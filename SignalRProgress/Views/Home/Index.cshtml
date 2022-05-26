@@ -1,0 +1,123 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+@*PROGRESS BAR MODAL*@
+<div class="modal fade in" id="mod-progress" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="text-center" style="font-family: Tahoma; font-weight: bold; font-size: 14px;">
+                    @*<div class="i-circle warning"><i class="fa fa-info"></i></div>*@
+                    <div id="result" style="font-size: 1.1em; padding-bottom: 5px">
+                        <p id="progressBarParagraph"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+
+<form id="SignalRForm" asp-controller="Home" asp-action="InvokeSignalR" method="post" class="form-horizontal FontGlobal" role="form">
+    <div class="text-center">
+        <h1 class="display-4">Welcome</h1>
+        <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    </div>
+</form>
+
+<div>
+    <button id="btnImportExcel" class="btn btn-danger btn-lg" style="width: 250px !important; margin-top: 10px; font: bold 15px Tahoma; width: 150px;" onclick="$('#SignalRForm').submit();">Do Work</button>
+    @*<button id="btnImportExcel" class="btn btn-danger btn-lg" style="width: 250px !important; margin-top: 10px; font: bold 15px Tahoma; width: 150px;" onclick="return DoAjaxPost(this);">Do Work</button>*@
+</div>
+
+
+
+@section scripts{
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+
+
+    <script>
+        function ProgressBarModal(showHide) {
+            if (showHide === 'show') {
+                $('#mod-progress').modal('show');
+                if (arguments.length >= 2) {
+                    $('#progressBarParagraph').text(arguments[1]);
+                } else {
+                    $('#progressBarParagraph').text('Error...');
+                }
+
+                window.progressBarActive = true;
+
+            } else {
+                $('#mod-progress').modal('hide');
+                window.progressBarActive = false;
+            }
+        }
+    </script>
+
+
+     <script>
+        function DoAjaxPost(btnClicked) {
+            //var $form = $(btnClicked).parents('form');
+            var $form = $("#SignalRForm");
+
+            $.ajax({
+                type: "POST",
+                url: $form.attr('action'),
+                data: $form.serialize(),
+                error: function(xhr, status, error) {
+                    console.log(error);
+                },
+                success: function(response) {
+                    console.log($form.attr('action'));
+                }
+            });
+
+            return false;// if it's a link to prevent post
+        }
+    </script>
+
+    <script>
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5004/jobprogress")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        async function start() {
+            try {
+                await connection.on("progress", (percent) => {
+                    if (percent === 100) {
+                        ProgressBarModal();
+                    } else {
+                        ProgressBarModal("show", `${percent}%`);
+                    }
+                });
+
+                await connection.start()
+                    .then(_ => connection.invoke("AssociateJob", "@ViewBag.JobId"))
+                    .catch(err => console.error(err.toString()));
+
+                //await connection.stop().then(console.log("bbb"));
+
+            } catch (err) {
+                console.log(err);
+                setTimeout(start, 500);
+            }
+        };
+
+        //if connection is disconnected then start it again
+        connection.onclose(start);
+
+        // Start the connection.
+        start();
+
+        //connection.stop().then(console.log('aaaa'));
+
+    </script>
+
+}
