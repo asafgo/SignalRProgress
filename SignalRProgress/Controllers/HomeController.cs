@@ -20,6 +20,8 @@ namespace SignalRProgress.Controllers
 
         public IActionResult Index()
         {
+            string jobId = Guid.NewGuid().ToString("N");
+            ViewBag.JobId = jobId;
             return View();
         }
 
@@ -36,13 +38,10 @@ namespace SignalRProgress.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> InvokeSignalR()
+        public async Task<IActionResult> InvokeSignalR(string jobId)
         {
             await Task.Delay(100).ConfigureAwait(false);
-
-            string jobId = Guid.NewGuid().ToString("N");
             ViewBag.JobId = jobId;
-
             Task task = Task.Run(async () =>
             {
                 for (int i = 0; i < 100; i++)
@@ -51,7 +50,6 @@ namespace SignalRProgress.Controllers
                     await Task.Delay(1000).ConfigureAwait(false);
                 }
             });
-
             return View("Index");
         }
 

@@ -27,14 +27,19 @@
         <h1 class="display-4">Welcome</h1>
         <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
     </div>
+      
+    <input  type="hidden" id ="hidJobId" name="jobId" value="@ViewBag.JobId"/>
 </form>
 
 <div>
-    <button id="btnImportExcel" class="btn btn-danger btn-lg" style="width: 250px !important; margin-top: 10px; font: bold 15px Tahoma; width: 150px;" onclick="$('#SignalRForm').submit();">Do Work</button>
-    @*<button id="btnImportExcel" class="btn btn-danger btn-lg" style="width: 250px !important; margin-top: 10px; font: bold 15px Tahoma; width: 150px;" onclick="return DoAjaxPost(this);">Do Work</button>*@
+    <button id="btnImportExcel" class="btn btn-danger btn-lg" 
+    style="width: 250px !important; margin-top: 10px; font: bold 15px Tahoma; width: 150px;" 
+    onclick="$('#SignalRForm').submit();">Do Work</button>
+
+    <button id="btnImportExcel" class="btn btn-danger btn-lg" 
+    style="width: 250px !important; margin-top: 10px; font: bold 15px Tahoma; width: 150px;" 
+    onclick="return DoAjaxPost(this);">Do Work (JQUery Ajax)</button>
 </div>
-
-
 
 @section scripts{
 
@@ -62,27 +67,7 @@
 
 
      <script>
-        function DoAjaxPost(btnClicked) {
-            //var $form = $(btnClicked).parents('form');
-            var $form = $("#SignalRForm");
-
-            $.ajax({
-                type: "POST",
-                url: $form.attr('action'),
-                data: $form.serialize(),
-                error: function(xhr, status, error) {
-                    console.log(error);
-                },
-                success: function(response) {
-                    console.log($form.attr('action'));
-                }
-            });
-
-            return false;// if it's a link to prevent post
-        }
-    </script>
-
-    <script>
+  
         var connection = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5004/jobprogress")
             .configureLogging(signalR.LogLevel.Information)
@@ -117,7 +102,26 @@
         start();
 
         //connection.stop().then(console.log('aaaa'));
+        function DoAjaxPost(btnClicked) {
+            //var $form = $(btnClicked).parents('form');
+            var $form = $("#SignalRForm");
 
+            //get the JobId 
+            var jobid =$("#hidJobId").val();
+            $.ajax({
+                type: "POST",
+                url: $form.attr('action')+"?jobId="+jobid,
+                data: $form.serialize(),
+                error: function(xhr, status, error) {
+                    console.log(error);
+                },
+                success: function(response) {
+                    console.log($form.attr('action'));   
+                }
+            });
+
+            return false;// if it's a link to prevent post
+        } 
     </script>
 
 }
